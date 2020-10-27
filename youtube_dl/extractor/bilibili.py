@@ -38,10 +38,10 @@ class BiliBiliIE(InfoExtractor):
                     '''
 
     _TESTS = [{
-        'url': 'http://www.bilibili.tv/video/av1074402/',
+        'url': 'https://www.bilibili.com/video/BV11x411K7CN',
         'md5': '5f7d29e1a2872f3df0cf76b1f87d3788',
         'info_dict': {
-            'id': '1074402',
+            'id': '11x411K7CN',
             'ext': 'flv',
             'title': '【金坷垃】金泡沫',
             'description': 'md5:ce18c2a2d2193f0df2917d270f2e5923',
