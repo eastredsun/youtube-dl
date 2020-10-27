@@ -34,7 +34,7 @@ class BiliBiliIE(InfoExtractor):
                                 anime/(?P<anime_id>\d+)/play\#
                             )(?P<id_bv>\d+)|
                             video/[bB][vV](?P<id>[^/?#&]+)
-                        )
+                        )(?:/?\?p=(?P<page>\d+))?
                     '''
 
     _TESTS = [{
@@ -51,6 +51,23 @@ class BiliBiliIE(InfoExtractor):
             'thumbnail': r're:^https?://.+\.jpg',
             'uploader': '菊子桑',
             'uploader_id': '156160',
+        },
+    }, {
+        # With page number
+        'url': 'https://www.bilibili.com/video/av41213189?p=2',
+        'md5': '302a18d8a622f0507302752105872fd8',
+        'info_dict': {
+            'id': '41213189_p2',
+            'cid': '72387898',
+            'ext': 'flv',
+            'title': '【春晚鬼畜】宋丹丹：我就是念诗女王！【改革春风吹进门】_p2',
+            'description': 'md5:a29fb90e0aff106d062a38658b0b75e2',
+            'duration': 152.067,
+            'timestamp': 1548014429,
+            'upload_date': '20190120',
+            'thumbnail': r're:^https?://.+\.jpg',
+            'uploader': '吃素的狮子',
+            'uploader_id': '808171',
         },
     }, {
         # Tested in BiliBiliBangumiIE
@@ -126,10 +143,14 @@ class BiliBiliIE(InfoExtractor):
         mobj = re.match(self._VALID_URL, url)
         video_id = mobj.group('id') or mobj.group('id_bv')
         anime_id = mobj.group('anime_id')
+        page_id = mobj.group('page')
         webpage = self._download_webpage(url, video_id)
 
         if 'anime/' not in url:
             cid = self._search_regex(
+                r'\bcid(?:["\']:|=)(\d+),["\']page(?:["\']:|=)' + str(page_id), webpage, 'cid',
+                default=None
+            ) or self._search_regex(
                 r'\bcid(?:["\']:|=)(\d+)', webpage, 'cid',
                 default=None
             ) or compat_parse_qs(self._search_regex(
@@ -209,7 +230,7 @@ class BiliBiliIE(InfoExtractor):
         title = self._html_search_regex(
             ('<h1[^>]+\btitle=(["\'])(?P<title>(?:(?!\1).)+)\1',
              '(?s)<h1[^>]*>(?P<title>.+?)</h1>'), webpage, 'title',
-            group='title')
+            group='title') + ('_p' + str(page_id) if page_id is not None else '')
         description = self._html_search_meta('description', webpage)
         timestamp = unified_timestamp(self._html_search_regex(
             r'<time[^>]+datetime="([^"]+)"', webpage, 'upload time',
@@ -219,7 +240,8 @@ class BiliBiliIE(InfoExtractor):
 
         # TODO 'view_count' requires deobfuscating Javascript
         info = {
-            'id': video_id,
+            'id': video_id if page_id is None else str(video_id) + '_p' + str(page_id),
+            'cid': cid,
             'title': title,
             'description': description,
             'timestamp': timestamp,
